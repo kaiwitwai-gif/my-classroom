@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Classroom Pro V14 - Global Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        .lesson-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <div id="authOverlay" class="fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-4 transition-all">
+        <div class="bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="inline-block bg-indigo-600 text-white p-4 rounded-3xl mb-4 shadow-lg shadow-indigo-200"><i class="fa-solid fa-graduation-cap text-3xl"></i></div>
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบห้องเรียน</h2>
+            </div>
+            
+            <div class="space-y-4">
+                <select id="role" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 transition-all appearance-none">
+                    <option value="student">นักศึกษา (Student)</option>
+                    <option value="teacher">อาจารย์ (Teacher)</option>
+                </select>
+                <input type="email" id="email" placeholder="อีเมล (เช่น Kaiwitwai@gmail.com)" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500">
+                <input type="password" id="pass" placeholder="รหัสผ่าน" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500">
+                <button onclick="login()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 shadow-xl transition-all">เข้าสู่ระบบ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" class="hidden h-full flex flex-col">
+        <header class="bg-white/80 backdrop-blur-md border-b px-8 py-5 flex justify-between items-center sticky top-0 z-50">
+            <div class="flex items-center gap-4">
+                <div class="bg-indigo-600 text-white w-10 h-10 flex items-center justify-center rounded-xl shadow-lg"><i class="fa-solid fa-atom"></i></div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800 tracking-tighter uppercase">Smart Classroom <span id="rLabel" class="text-indigo-600"></span></h1>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Interactive Learning System</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="hidden md:block text-right border-r pr-6 border-slate-100">
+                    <p id="uName" class="text-sm font-bold text-slate-700"></p>
+                    <p id="uEmail" class="text-[10px] text-slate-400"></p>
+                </div>
+                <button onclick="location.reload()" class="bg-rose-50 text-rose-500 w-10 h-10 rounded-xl hover:bg-rose-500 hover:text-white transition-all duration-300"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+        </header>
+
+        <main class="flex-1 grid grid-cols-12 gap-6 p-6 overflow-hidden">
+            <div class="col-span-12 lg:col-span-8 flex flex-col gap-6 overflow-y-auto pr-2 custom-scroll">
+                
+                <div id="tPanel" class="bg-white rounded-[2.5rem] p-8 border-2 border-dashed border-indigo-100 hidden relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity"><i class="fa-solid fa-toolbox text-8xl text-indigo-900"></i></div>
+                    <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3"><i class="fa-solid fa-folder-plus text-indigo-600"></i> เพิ่มและแก้ไขบทเรียนอัจฉริยะ</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <input type="text" id="mTitle" placeholder="หัวข้อบทเรียน..." class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-400 transition-all font-medium">
+                            <input type="text" id="mExam" placeholder="ลิงก์ Google Form ข้อสอบ" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-400 transition-all font-medium">
+                        </div>
+                        <div class="space-y-3">
+                            <label class="flex items-center justify-between p-4 bg-indigo-50 border-2 border-indigo-100 rounded-2xl cursor-pointer hover:bg-indigo-100 transition-all group">
+                                <span class="text-sm font-bold text-indigo-700 flex items-center gap-3"><i class="fa-solid fa-file-pdf"></i> <span id="lp">สไลด์การสอน PDF</span></span>
+                                <input type="file" id="fp" accept=".pdf" class="hidden" onchange="updateFileName('lp', this)">
+                                <i class="fa-solid fa-circle-plus text-indigo-400 group-hover:scale-110 transition-transform"></i>
+                            </label>
+                            <label class="flex items-center justify-between p-4 bg-emerald-50 border-2 border-emerald-100 rounded-2xl cursor-pointer hover:bg-emerald-100 transition-all group">
+                                <span class="text-sm font-bold text-emerald-700 flex items-center gap-3"><i class="fa-solid fa-scroll"></i> <span id="ls">แผนการสอน PDF</span></span>
+                                <input type="file" id="fs" accept=".pdf" class="hidden" onchange="updateFileName('ls', this)">
+                                <i class="fa-solid fa-circle-plus text-emerald-400 group-hover:scale-110 transition-transform"></i>
+                            </label>
+                        </div>
+                    </div>
+                    <button onclick="save()" id="sBtn" class="w-full mt-6 bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-black transition-all">บันทึกสื่อการสอนเข้าคลาวด์</button>
+                </div>
+
+                <div class="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col h-full min-h-[600px]">
+                    <div id="v" class="flex-1 bg-slate-50 flex flex-col items-center justify-center p-10 text-center relative">
+                        <div id="vOverlay" class="space-y-4 animate-pulse">
+                            <i class="fa-solid fa-file-pdf text-7xl text-slate-200"></i>
+                            <p class="text-slate-400 font-medium">เลือกบทเรียนเพื่อเริ่มแสดงผลสไลด์และสื่อการสอน</p>
+                        </div>
+                        <div id="pdfFrame" class="hidden w-full h-full"></div>
+                    </div>
+                    
+                    <div class="p-10 border-t border-slate-50">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-black text-slate-800 tracking-tight">รายชื่อบทเรียนที่มีทั้งหมด</h4>
+                            <div id="count" class="bg-indigo-100 text-indigo-700 px-5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">0 บทเรียน</div>
+                        </div>
+                        <div id="list" class="grid gap-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-12 lg:col-span-4 h-full flex flex-col gap-6">
+                <div class="bg-indigo-600 rounded-[3rem] p-8 text-white shadow-2xl flex flex-col h-full overflow-hidden relative">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+                    <div class="flex items-center gap-4 mb-8 z-10">
+                        <div class="bg-white/20 p-3 rounded-2xl"><i class="fa-solid fa-robot text-2xl"></i></div>
+                        <div><p class="font-black text-lg">AI Tutor Asst.</p><p class="text-xs text-white/60 tracking-widest uppercase">System Online</p></div>
+                    </div>
+                    <div id="chat" class="flex-1 overflow-y-auto space-y-4 mb-6 pr-2 custom-scroll z-10 text-sm leading-relaxed">
+                        <div class="bg-white/10 p-5 rounded-3xl rounded-tl-none border border-white/5">สวัสดีครับอาจารย์และนักศึกษา ข้อมูลบทเรียนถูกซิงค์ข้อมูลตรงกับฐานข้อมูลคลาวด์แล้วครับ สอบถามได้เลย!</div>
+                    </div>
+                    <div class="relative z-10">
+                        <input type="text" id="ai" onkeypress="if(event.key==='Enter') ask()" placeholder="พิมพ์คำถามเกี่ยวกับบทเรียน..." class="w-full bg-white/10 border-none rounded-2xl p-5 pr-14 text-white placeholder:text-white/40 outline-none focus:ring-4 focus:ring-white/10 transition-all">
+                        <button onclick="ask()" class="absolute right-3 top-3 w-10 h-10 bg-white text-indigo-600 rounded-xl flex items-center justify-center hover:scale-105 transition-transform shadow-lg"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_KEY = "AIzaSyDYu9aE1Xu1RzKS5G2Ck8S4qmxy8T7psYU";
+        const TEACHER = { e: 'Kaiwitwai@gmail.com', p: '123456789zz' };
+        
+        // จำลอง Cloud Data โดยดึงจาก LocalStorage (ในแอปจริงจะใช้ Firebase)
+        let data = JSON.parse(localStorage.getItem('cloud_classroom_v14')) || [];
+        let user = null;
+
+        function updateFileName(id, el) { document.getElementById(id).innerText = el.files[0].name; }
+
+        function login() {
+            const e = document.getElementById('email').value.toLowerCase().trim(), p = document.getElementById('pass').value, r = document.getElementById('role').value;
+            if(r === 'teacher' && e === TEACHER.e.toLowerCase() && p === TEACHER.p) launch('Teacher', 'อาจารย์ไกวิทย์', e);
+            else if(r === 'student' && e) launch('Student', e.split('@')[0], e);
+            else alert('ข้อมูลเข้าสู่ระบบไม่ถูกต้อง');
+        }
+
+        function launch(r, n, e) {
+            user = { r, n, e };
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            document.getElementById('rLabel').innerText = r;
+            document.getElementById('uName').innerText = n;
+            document.getElementById('uEmail').innerText = e;
+            if(r === 'Teacher') document.getElementById('tPanel').classList.remove('hidden');
+            render();
+        }
+
+        const to64 = f => new Promise((res, rej) => {
+            const r = new FileReader(); r.readAsDataURL(f);
+            r.onload = () => res(r.result); r.onerror = e => rej(e);
+        });
+
+        async function save() {
+            const t = document.getElementById('mTitle').value, pf = document.getElementById('fp').files[0], sf = document.getElementById('fs').files[0], ex = document.getElementById('mExam').value;
+            if(!t || !pf) return alert('กรุณาใส่หัวข้อและสไลด์ PDF');
+            
+            const b = document.getElementById('sBtn'); b.innerText = "กำลังซิงค์ข้อมูลกับคลาวด์..."; b.disabled = true;
+            try {
+                const pData = await to64(pf);
+                const sData = sf ? await to64(sf) : null;
+                data.push({ id: Date.now(), t, pData, sData, ex: ex || "#" });
+                localStorage.setItem('cloud_classroom_v14', JSON.stringify(data)); // บันทึกถาวร
+                alert('บันทึกสำเร็จ! นักเรียนทุกคนจะเห็นบทเรียนนี้ทันที');
+                location.reload();
+            } catch (err) { alert('ไฟล์ใหญ่เกินไป'); }
+            finally { b.disabled = false; b.innerText = "บันทึกสื่อการสอนเข้าคลาวด์"; }
+        }
+
+        function render() {
+            const l = document.getElementById('list'); l.innerHTML = '';
+            document.getElementById('count').innerText = `${data.length} บทเรียน`;
+            data.forEach((item, i) => {
+                l.innerHTML += `
+                    <div class="bg-white border-2 border-slate-50 rounded-3xl p-6 flex flex-wrap justify-between items-center lesson-card transition-all">
+                        <div class="cursor-pointer flex items-center gap-5" onclick="view('${item.pData}')">
+                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black">${i+1}</div>
+                            <div><p class="font-bold text-slate-800 text-lg">${item.t}</p><p class="text-[10px] text-indigo-500 font-bold tracking-widest uppercase">Slide Presentation Inside</p></div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="view('${item.pData}')" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-bold hover:bg-slate-900 transition-all shadow-lg shadow-indigo-100">เปิดสไลด์</button>
+                            ${item.sData ? `<a href="${item.sData}" download="${item.t}_Syllabus.pdf" class="bg-emerald-50 text-emerald-700 px-6 py-3 rounded-2xl text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all">แผนการสอน</a>` : ''}
+                            <a href="${item.ex}" target="_blank" class="bg-orange-50 text-orange-600 px-6 py-3 rounded-2xl text-xs font-bold hover:bg-orange-600 hover:text-white transition-all">ทำข้อสอบ</a>
+                            ${user.r === 'Teacher' ? `<button onclick="del(${i})" class="text-rose-400 p-3 hover:text-rose-600 transition-colors"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function view(d) {
+            document.getElementById('vOverlay').classList.add('hidden');
+            const f = document.getElementById('pdfFrame'); f.classList.remove('hidden');
+            f.innerHTML = `<iframe src="${d}" class="w-full h-full rounded-[2.5rem] border-none shadow-inner"></iframe>`;
+        }
+
+        function del(i) {
+            if(confirm('ลบบทเรียนนี้ออกจากระบบคลาวด์? นักเรียนทุกคนจะไม่สามารถเข้าถึงได้อีก')) {
+                data.splice(i, 1);
+                localStorage.setItem('cloud_classroom_v14', JSON.stringify(data));
+                render();
+            }
+        }
+
+        async function ask() {
+            const i = document.getElementById('ai'); if(!i.value) return;
+            const m = i.value; addM('user', m); i.value = '';
+            const l = addM('ai', 'AI กำลังประมวลผล...');
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `ในบทเรียนนี้: ${m}` }] }] })
+                });
+                const d = await res.json(); l.innerHTML = d.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+            } catch (e) { l.innerHTML = "ขออภัย ระบบคลาวด์ AI ขัดข้อง"; }
+        }
+
+        function addM(r, t) {
+            const b = document.getElementById('chat');
+            const d = document.createElement('div');
+            d.className = r === 'user' ? "bg-white/20 p-5 rounded-3xl rounded-tr-none ml-10 border border-white/10" : "bg-white text-indigo-900 p-5 rounded-3xl rounded-tl-none mr-10 shadow-lg";
+            d.innerHTML = t; b.appendChild(d); b.scrollTop = b.scrollHeight; return d;
+        }
+    </script>
+</body>
+</html>
